@@ -29,8 +29,6 @@ def set_handler(event_type, handler):
 
 
 def process_event(event):
-    print(event)
-
     if event.type not in handlers:
         raise Exception("Unknown event type: " + event.type)
     handlers[event.type](event)
