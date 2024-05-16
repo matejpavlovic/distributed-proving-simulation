@@ -3,6 +3,7 @@
 # and producing outputs (such as proofs).
 # In the simulation, modules are invoked by the orchestrator, inputs being passed as arguments.
 # This should correspond to some orchestration mechanism assigning tasks to remote actors in practice.
+# Each module records statistics about spent resources.
 
 import eventloop
 import events
