@@ -12,5 +12,5 @@ import events
 import eventloop
 
 orchestrator.init()
-eventloop.emit(events.Batch(0, int(sys.argv[1])))
+eventloop.add(events.Batch(0, int(sys.argv[1])))
 eventloop.run()

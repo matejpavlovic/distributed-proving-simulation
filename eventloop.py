@@ -13,7 +13,7 @@ pending_events = PriorityQueue()
 handlers = {}
 
 
-def emit(event):
+def add(event):
     pending_events.put((event.ts, event))
 
 

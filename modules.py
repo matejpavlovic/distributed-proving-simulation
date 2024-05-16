@@ -14,24 +14,24 @@ prover_delay = 200
 
 def basic_witness_generator(batch):
     for i in range(batch.size):
-        eventloop.emit(events.Witness(batch.ts + witness_gen_delay, 0, i))
+        eventloop.add(events.Witness(batch.ts + witness_gen_delay, 0, i))
 
 
 def witness_generator(inputs, index):
     # Stub. Simply add witness generation delay to the highest input timestamp.
     # Level is the same for all inputs, taking first and incrementing by 1.
-    eventloop.emit(events.Witness(max(i.ts for i in inputs) + witness_gen_delay, inputs[0].level+1, index))
+    eventloop.add(events.Witness(max(i.ts for i in inputs) + witness_gen_delay, inputs[0].level + 1, index))
 
 
 def witness_vector_generator(witness):
-    eventloop.emit(events.WitnessVector(witness.ts + witness_vec_gen_delay, witness.level, witness.index))
+    eventloop.add(events.WitnessVector(witness.ts + witness_vec_gen_delay, witness.level, witness.index))
 
 
 def intermediate_prover(inputs, index):
     # Stub. Simply add prover delay to the highest input timestamp. Level is the same for all inputs.
     # The level is not incremented, as proving and witness generation are considered to be at the same level.
-    eventloop.emit(events.IntermediateProof(max(i.ts for i in inputs) + prover_delay, inputs[0].level, index))
+    eventloop.add(events.IntermediateProof(max(i.ts for i in inputs) + prover_delay, inputs[0].level, index))
 
 
 def root_prover(witness_vector):
-    eventloop.emit(events.RootProof(witness_vector.ts + prover_delay))
+    eventloop.add(events.RootProof(witness_vector.ts + prover_delay))
