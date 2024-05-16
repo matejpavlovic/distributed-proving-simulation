@@ -37,5 +37,8 @@ def process_event(event):
 
 
 def run():
+    i = 0
     while not pending_events.empty():
         process_event(next_event())
+        i += 1
+    return i

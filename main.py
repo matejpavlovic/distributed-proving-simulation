@@ -13,4 +13,5 @@ import eventloop
 
 orchestrator.init()
 eventloop.add(events.Batch(0, int(sys.argv[1])))
-eventloop.run()
+num_events = eventloop.run()
+print("Number of events processed: {0}".format(num_events))
