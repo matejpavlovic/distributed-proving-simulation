@@ -17,8 +17,16 @@ The simulation of proving a single batch is started by running
 python3 main.py <num_witnesses>
 ```
 
+Other parameters, such as the sizes of proofs and witnesses, computation delays, etc., are hard-coded in
+[modules.py](/modules.py) for now.
+
 The degree of the proof tree (separately for provers and witness generators) is hard-coded in the corresponding
 variables in [orchestrator.py](/orchestrator.py).
+
+## Statistics
+
+At the end of the run, the simulator prints basic statistics about how much computation and communication has been
+performed (in simulation) by each type of component.
 
 ## See also
 
