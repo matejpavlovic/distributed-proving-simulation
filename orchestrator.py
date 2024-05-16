@@ -30,27 +30,35 @@ num_proofs = {}
 
 def process_batch(batch):
 
-    # Collect
+    # Generate the proof tree structure, i.e., for each level of the proof tree,
+    # calculate the number of witness vectors and proofs that will be computed at that level.
+
+    # At level 0, the number of witness vectors is determined by batch size.
     num_witness_vectors[0] = batch.size
+    # There will be one proof per prover_fan_in witness vectors, plus one proof for the rest (if any)
     num_proofs[0] = batch.size // prover_fan_in + (1 if batch.size % prover_fan_in > 0 else 0)
+
+    # Add more levels until there is only one proof.
     items = num_proofs[0]
     level = 1
     while items > 1:
+        # One witness vector per witness_gen_fan_in inputs,        plus one witness vector for the rest (if any)
         num_witness_vectors[level] = items // witness_gen_fan_in + (1 if items % witness_gen_fan_in > 0 else 0)
         items = num_witness_vectors[level]
 
+        # One proof per prover_fan_in inputs,        plus one proof for the rest (if any)
         num_proofs[level] = items // prover_fan_in + (1 if items % prover_fan_in > 0 else 0)
         items = num_proofs[level]
 
         level += 1
 
-    print(num_witness_vectors)
-    print(num_proofs)
-
+    # Now that the proof tree structure is known, start the basic witness generator
+    # to trigger the actual (simulated) proof computation.
     modules.basic_witness_generator(batch)
 
 
 def process_witness(witness):
+    # When a witness is ready, feed it to a witness vector generator.
     modules.witness_vector_generator(witness)
 
 
@@ -76,7 +84,7 @@ def process_witness_vector(witness_vector):
         else:
             return
 
-    # Process witness vectors
+    # Pass the collected witness vectors to the corresponding prover.
     if num_proofs[level] == 1:
         modules.root_prover(witness_vector)
     else:
@@ -113,4 +121,4 @@ def init():
     eventloop.set_handler("witness", process_witness)
     eventloop.set_handler("witness_vector", process_witness_vector)
     eventloop.set_handler("intermediate_proof", process_intermediate_proof)
-    eventloop.set_handler("root_proof", lambda event: None)
+    eventloop.set_handler("root_proof", lambda event: None)  # Do nothing with the root proof.
