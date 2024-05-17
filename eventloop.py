@@ -34,6 +34,7 @@ def process_event(event):
     handlers[event.type](event)
     return event.ts
 
+
 # Processes all events in the event loop, including the ones that are added during processing itself.
 # Returns a tuple (number of processed events, timestamp of last processed event).
 def run():
