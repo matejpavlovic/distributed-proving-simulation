@@ -32,11 +32,14 @@ def process_event(event):
     if event.type not in handlers:
         raise Exception("Unknown event type: " + event.type)
     handlers[event.type](event)
+    return event.ts
 
-
+# Processes all events in the event loop, including the ones that are added during processing itself.
+# Returns a tuple (number of processed events, timestamp of last processed event).
 def run():
     i = 0
+    ts = 0
     while not pending_events.empty():
-        process_event(next_event())
+        ts = process_event(next_event())
         i += 1
-    return i
+    return i, ts

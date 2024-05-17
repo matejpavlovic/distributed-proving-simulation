@@ -14,7 +14,8 @@ import stats
 
 orchestrator.init()
 eventloop.add(events.Batch(0, int(sys.argv[1])))
-num_events = eventloop.run()
+num_events, elapsed_time = eventloop.run()
 
 print("Number of events processed: {0}".format(num_events))
+print("Elapsed logical time: {0}".format(elapsed_time))
 stats.print_data()
