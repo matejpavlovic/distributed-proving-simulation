@@ -5,11 +5,14 @@ from collections import defaultdict
 
 import modules
 import eventloop
+import workqueue
 
 # These values determine how many inputs are aggregated at each level of the proof tree
 # by, respectively, the witness generators and the provers.
 witness_gen_fan_in = 2
 prover_fan_in = 2
+
+workqueue.init_workers("intermediate_prover", 10)
 
 # The total number of witnesses, witness vectors, and proofs for each level.
 # E.g., proof_tree_width[2] stores the proof tree width at level 2.
@@ -50,10 +53,18 @@ def process_witness_vector(witness_vector):
     if proof_tree_width[witness_vector.level] == 1:
         modules.root_prover(witness_vector)
     else:
-        modules.intermediate_prover(witness_vector, witness_vector.index)
+        def prove(timestamp):
+            modules.intermediate_prover(witness_vector, timestamp)
+        workqueue.submit("intermediate_prover", prove, witness_vector.ts)
 
 
 def process_intermediate_proof(proof):
+
+    # A prover just finished working. Give it a new proving task if any are pending.
+    # Note that this code must be executed before this function has a chance to return.
+    # That is why we do it before processing the proof.
+    workqueue.free("intermediate_prover", proof.ts)
+
     # Convenience variables
     level = proof.level
     index = proof.index
