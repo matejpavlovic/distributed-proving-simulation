@@ -3,18 +3,10 @@
 
 from collections import defaultdict
 
+import config
 import modules
 import eventloop
 import workqueue
-
-# These values determine how many inputs are aggregated at each level of the proof tree
-# by, respectively, the witness generators and the provers.
-witness_gen_fan_in = 2
-
-# Set the number of available workers for each relevant module type.
-workqueue.init_workers("witness_generator", 50)
-workqueue.init_workers("intermediate_prover", 10)
-workqueue.init_workers("witness_vector_generator", 20)
 
 # The total number of witnesses, witness vectors, and proofs for each level.
 # E.g., proof_tree_width[2] stores the proof tree width at level 2.
@@ -35,9 +27,9 @@ def process_batch(batch):
     # Add more levels until there is only one proof.
     level = 0
     while proof_tree_width[level] > 1:
-        # One witness vector per witness_gen_fan_in inputs plus one witness vector for the rest (if any)
-        proof_tree_width[level + 1] = (proof_tree_width[level] // witness_gen_fan_in +
-                                       (1 if proof_tree_width[level] % witness_gen_fan_in > 0 else 0))
+        # One witness vector per config.data["proof_tree_degree"] inputs plus one witness vector for the rest (if any)
+        proof_tree_width[level + 1] = (proof_tree_width[level] // config.data["proof_tree_degree"] +
+                                       (1 if proof_tree_width[level] % config.data["proof_tree_degree"] > 0 else 0))
         level += 1
 
     # Now that the proof tree structure is known, start the basic witness generator
@@ -87,9 +79,9 @@ def process_intermediate_proof(proof):
     proofs[level][index] = proof
 
     # Collect the inputs for witness computation.
-    # (One witness is computed for a segment of witness_gen_fan_in consecutive proofs.)
-    start_proof = (index // witness_gen_fan_in) * witness_gen_fan_in
-    end_proof = min(start_proof + witness_gen_fan_in, proof_tree_width[level])
+    # (One witness is computed for a segment of config.data["proof_tree_degree"] consecutive proofs.)
+    start_proof = (index // config.data["proof_tree_degree"]) * config.data["proof_tree_degree"]
+    end_proof = min(start_proof + config.data["proof_tree_degree"], proof_tree_width[level])
     inputs = []
     for i in range(start_proof, end_proof):
         if i in proofs[level]:
@@ -99,11 +91,16 @@ def process_intermediate_proof(proof):
 
     # Feed the proofs in the next level of witness generation.
     def generate_witness(timestamp):
-        modules.witness_generator(inputs, index // witness_gen_fan_in, timestamp)
+        modules.witness_generator(inputs, index // config.data["proof_tree_degree"], timestamp)
     workqueue.submit("witness_generator", generate_witness, proof.ts)
 
 
 def init():
+    # Set the number of available workers for each relevant module type based on the given configuration
+    for module, num_workers in config.data["num_workers"].items():
+        workqueue.init_workers(module, num_workers)
+
+    # Register event handlers for all the events that can occur.
     eventloop.set_handler("batch", process_batch)
     eventloop.set_handler("witness", process_witness)
     eventloop.set_handler("witness_vector", process_witness_vector)

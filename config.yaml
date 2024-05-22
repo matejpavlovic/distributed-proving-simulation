@@ -1,0 +1,29 @@
+# Properties of the input batch.
+batch:
+  # Number of witnesses generated from a single batch.
+  # (This will probably be refined later, when more fine-grained modelling is supported)
+  num_witnesses: 100
+
+# Properties of objects exchanged by various modules
+# Since this is a simulation, units are arbitrary. Imagine, for example, bytes for size and seconds for time.
+witness:
+  size:  5
+  generation_time: 10
+witness_vector:
+  size: 5000
+  generation_time: 1000
+proof:
+  size: 2
+  generation_time: 200
+
+# These values determine how many inputs are aggregated at each level of the proof tree
+# by, respectively, the witness generators and the provers.
+proof_tree_degree: 2
+
+# Number of workers for each module type.
+# The simulation makes sure that, at no point in (simulated) time,
+# no more than the configured number of instances of each module type runs concurrently.
+num_workers:
+  witness_generator: 50
+  intermediate_prover: 10
+  witness_vector_generator: 20
