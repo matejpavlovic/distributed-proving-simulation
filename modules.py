@@ -45,12 +45,12 @@ def witness_vector_generator(witness):
     stats.record_compute("witness_vector_generator", witness_vec_gen_delay)
 
 
-def intermediate_prover(inputs, index):
+def intermediate_prover(witness_vector, index):
     # Stub. Simply add prover delay to the highest input timestamp. Level is the same for all inputs.
     # The level is not incremented, as proving and witness generation are considered to be at the same level.
-    eventloop.add(events.IntermediateProof(max(i.ts for i in inputs) + prover_delay, inputs[0].level, index))
+    eventloop.add(events.IntermediateProof(witness_vector.ts + prover_delay, witness_vector.level, index))
 
-    stats.record_receive("prover", len(inputs) * witness_vec_size)
+    stats.record_receive("prover", witness_vec_size)
     stats.record_send("prover", proof_size)
     stats.record_compute("prover", prover_delay)
 

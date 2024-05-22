@@ -11,45 +11,28 @@ import eventloop
 witness_gen_fan_in = 2
 prover_fan_in = 2
 
-# For each level, set of computed witness vectors by index.
-# E.g., witness_vectors[2][5] stores the witness vector at level 2, index 5.
-witness_vectors = defaultdict(lambda: {})
+# The total number of witnesses, witness vectors, and proofs for each level.
+# E.g., proof_tree_width[2] stores the proof tree width at level 2.
+proof_tree_width = {}
 
 # For each level, set of computed proofs by index.
 # E.g., proofs[2][5] stores the proof at level 2, index 5.
 proofs = defaultdict(lambda: {})
 
-# The total number of witness vectors for each level.
-# E.g., num_witness_vectors[2] stores the total number of witness vectors stored at level 2.
-num_witness_vectors = {}
-
-# The total number of proofs for each level.
-# E.g., num_proofs[2] stores the total number of witness vectors stored at level 2.
-num_proofs = {}
-
 
 def process_batch(batch):
-
     # Generate the proof tree structure, i.e., for each level of the proof tree,
     # calculate the number of witness vectors and proofs that will be computed at that level.
 
     # At level 0, the number of witness vectors is determined by batch size.
-    num_witness_vectors[0] = batch.size
-    # There will be one proof per prover_fan_in witness vectors, plus one proof for the rest (if any)
-    num_proofs[0] = batch.size // prover_fan_in + (1 if batch.size % prover_fan_in > 0 else 0)
+    proof_tree_width[0] = batch.size
 
     # Add more levels until there is only one proof.
-    items = num_proofs[0]
-    level = 1
-    while items > 1:
-        # One witness vector per witness_gen_fan_in inputs,        plus one witness vector for the rest (if any)
-        num_witness_vectors[level] = items // witness_gen_fan_in + (1 if items % witness_gen_fan_in > 0 else 0)
-        items = num_witness_vectors[level]
-
-        # One proof per prover_fan_in inputs,        plus one proof for the rest (if any)
-        num_proofs[level] = items // prover_fan_in + (1 if items % prover_fan_in > 0 else 0)
-        items = num_proofs[level]
-
+    level = 0
+    while proof_tree_width[level] > 1:
+        # One witness vector per witness_gen_fan_in inputs plus one witness vector for the rest (if any)
+        proof_tree_width[level + 1] = (proof_tree_width[level] // witness_gen_fan_in +
+                                       (1 if proof_tree_width[level] % witness_gen_fan_in > 0 else 0))
         level += 1
 
     # Now that the proof tree structure is known, start the basic witness generator
@@ -63,32 +46,11 @@ def process_witness(witness):
 
 
 def process_witness_vector(witness_vector):
-
-    # Convenience variables
-    level = witness_vector.level
-    index = witness_vector.index
-
-    # Register computed witness vector.
-    if index in witness_vectors[level]:
-        raise Exception("Witness vector with index {0} at level {1} already processed.".format(index, level))
-    witness_vectors[level][index] = witness_vector
-
-    # Collect the inputs for proof computation.
-    # (One proof is computed for a segment of prover_fan_in consecutive witness vectors.)
-    start_wv = (index // prover_fan_in) * prover_fan_in
-    stop_wv = min(start_wv+prover_fan_in, num_witness_vectors[level])
-    inputs = []
-    for i in range(start_wv, stop_wv):
-        if i in witness_vectors[level]:
-            inputs.append(witness_vectors[level][i])
-        else:
-            return
-
-    # Pass the collected witness vectors to the corresponding prover.
-    if num_proofs[level] == 1:
+    # Pass the witness vector to a prover.
+    if proof_tree_width[witness_vector.level] == 1:
         modules.root_prover(witness_vector)
     else:
-        modules.intermediate_prover(inputs, index // prover_fan_in)
+        modules.intermediate_prover(witness_vector, witness_vector.index)
 
 
 def process_intermediate_proof(proof):
@@ -104,7 +66,7 @@ def process_intermediate_proof(proof):
     # Collect the inputs for witness computation.
     # (One witness is computed for a segment of witness_gen_fan_in consecutive proofs.)
     start_proof = (index // witness_gen_fan_in) * witness_gen_fan_in
-    end_proof = min(start_proof+witness_gen_fan_in, num_proofs[level])
+    end_proof = min(start_proof + witness_gen_fan_in, proof_tree_width[level])
     inputs = []
     for i in range(start_proof, end_proof):
         if i in proofs[level]:
