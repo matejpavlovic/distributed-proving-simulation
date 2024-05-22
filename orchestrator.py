@@ -10,7 +10,6 @@ import workqueue
 # These values determine how many inputs are aggregated at each level of the proof tree
 # by, respectively, the witness generators and the provers.
 witness_gen_fan_in = 2
-prover_fan_in = 2
 
 workqueue.init_workers("intermediate_prover", 10)
 
