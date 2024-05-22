@@ -11,7 +11,10 @@ import workqueue
 # by, respectively, the witness generators and the provers.
 witness_gen_fan_in = 2
 
+# Set the number of available workers for each relevant module type.
+workqueue.init_workers("witness_generator", 50)
 workqueue.init_workers("intermediate_prover", 10)
+workqueue.init_workers("witness_vector_generator", 20)
 
 # The total number of witnesses, witness vectors, and proofs for each level.
 # E.g., proof_tree_width[2] stores the proof tree width at level 2.
@@ -43,11 +46,21 @@ def process_batch(batch):
 
 
 def process_witness(witness):
-    # When a witness is ready, feed it to a witness vector generator.
-    modules.witness_vector_generator(witness)
+
+    # A witness generator just finished working. Give it a new task if any are pending.
+    workqueue.free("witness_generator", witness.ts)
+
+    # Feed the witness to a witness vector generator.
+    def generate_witness_vector(timestamp):
+        modules.witness_vector_generator(witness, timestamp)
+    workqueue.submit("witness_vector_generator", generate_witness_vector, witness.ts)
 
 
 def process_witness_vector(witness_vector):
+
+    # A witness vector generator just finished working. Give it a new task if any are pending.
+    workqueue.free("witness_vector_generator", witness_vector.ts)
+
     # Pass the witness vector to a prover.
     if proof_tree_width[witness_vector.level] == 1:
         modules.root_prover(witness_vector)
@@ -85,7 +98,9 @@ def process_intermediate_proof(proof):
             return
 
     # Feed the proofs in the next level of witness generation.
-    modules.witness_generator(inputs, index // witness_gen_fan_in)
+    def generate_witness(timestamp):
+        modules.witness_generator(inputs, index // witness_gen_fan_in, timestamp)
+    workqueue.submit("witness_generator", generate_witness, proof.ts)
 
 
 def init():

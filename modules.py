@@ -27,18 +27,18 @@ def basic_witness_generator(batch):
         stats.record_compute("basic_witness_gen", witness_gen_delay)
 
 
-def witness_generator(inputs, index):
+def witness_generator(inputs, index, timestamp):
     # Stub. Simply add witness generation delay to the highest input timestamp.
     # Level is the same for all inputs, taking first and incrementing by 1.
-    eventloop.add(events.Witness(max(i.ts for i in inputs) + witness_gen_delay, inputs[0].level + 1, index))
+    eventloop.add(events.Witness(timestamp + witness_gen_delay, inputs[0].level + 1, index))
 
     stats.record_receive("witness_gen", len(inputs) * proof_size)
     stats.record_send("witness_gen", witness_size)
     stats.record_compute("witness_gen", witness_gen_delay)
 
 
-def witness_vector_generator(witness):
-    eventloop.add(events.WitnessVector(witness.ts + witness_vec_gen_delay, witness.level, witness.index))
+def witness_vector_generator(witness, timestamp):
+    eventloop.add(events.WitnessVector(timestamp + witness_vec_gen_delay, witness.level, witness.index))
 
     stats.record_receive("witness_vector_generator", witness_size)
     stats.record_send("witness_vector_generator", witness_vec_size)
