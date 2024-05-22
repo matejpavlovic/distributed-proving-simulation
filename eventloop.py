@@ -37,10 +37,15 @@ def process_event(event):
 
 # Processes all events in the event loop, including the ones that are added during processing itself.
 # Returns a tuple (number of processed events, timestamp of last processed event).
-def run():
+def run(verbose=False):
     i = 0
     ts = 0
     while not pending_events.empty():
-        ts = process_event(next_event())
+        event = next_event()
+
+        if verbose:
+            print(event)
+
+        ts = process_event(event)
         i += 1
     return i, ts
