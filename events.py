@@ -43,8 +43,12 @@ class Witness(Event):
     def __lt__(self, other):
         if Event.__lt__(self, other):
             return True
+        if Event.__lt__(other, self):
+            return False
         if self.level < other.level:
             return True
+        if self.level > other.level:
+            return False
         return self.index < other.index
 
     def __str__(self):
@@ -60,8 +64,12 @@ class WitnessVector(Event):
     def __lt__(self, other):
         if Event.__lt__(self, other):
             return True
+        if Event.__lt__(other, self):
+            return False
         if self.level < other.level:
             return True
+        if self.level > other.level:
+            return False
         return self.index < other.index
 
     def __str__(self):
@@ -77,12 +85,32 @@ class IntermediateProof(Event):
     def __lt__(self, other):
         if Event.__lt__(self, other):
             return True
+        if Event.__lt__(other, self):
+            return False
         if self.level < other.level:
             return True
+        if self.level > other.level:
+            return False
         return self.index < other.index
 
     def __str__(self):
         return "IntermediateProof(ts={0}, level={1}, index={2})".format(self.ts, self.level, self.index)
+
+
+class IntermediateProofTimeout(Event):
+    def __init__(self, ts, witness_vector):
+        Event.__init__(self, ts, "intermediate_proof_timeout")
+        self.witness_vector = witness_vector
+
+    def __lt__(self, other):
+        if Event.__lt__(self, other):
+            return True
+        if Event.__lt__(other, self):
+            return False
+        return self.witness_vector < other.witness_vector
+
+    def __str__(self):
+        return "IntermediateProofTimeout(ts={0}, witness_vector={1})".format(self.ts, self.witness_vector)
 
 
 class RootProof(Event):

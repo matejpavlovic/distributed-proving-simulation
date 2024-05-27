@@ -4,7 +4,7 @@ batch:
   # (This will probably be refined later, when more fine-grained modelling is supported)
   num_witnesses: 100
 
-# Properties of objects exchanged by various modules
+# Properties of various modules and the objects exchanged by them.
 # Since this is a simulation, units are arbitrary. Imagine, for example, bytes for size and seconds for time.
 witness:
   size:  5
@@ -15,9 +15,11 @@ witness_vector:
 proof:
   size: 2
   generation_time: 200
+  omission_probability: 0.1
+  timeout: 1000
 
 # These values determine how many inputs are aggregated at each level of the proof tree
-# by, respectively, the witness generators and the provers.
+# by the witness generators.
 proof_tree_degree: 2
 
 # Number of workers for each module type.
@@ -27,3 +29,7 @@ num_workers:
   witness_generator: 50
   intermediate_prover: 10
   witness_vector_generator: 20
+
+# If set to true, a worker that times out once is not assigned new tasks.
+# Attention: If all provers are banned, the simulation stops without producing a proof.
+ban_timed_out_workers: false

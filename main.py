@@ -3,7 +3,7 @@
 # Currently, for simplicity, we encode this number as the "size" property of a batch.
 #
 # usage:
-#          python3 main.py num_batches
+#          python3 main.py [config_file]
 
 import sys
 

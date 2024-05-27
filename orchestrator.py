@@ -95,6 +95,17 @@ def process_intermediate_proof(proof):
     workqueue.submit("witness_generator", generate_witness, proof.ts)
 
 
+def process_intermediate_proof_timeout(timeout):
+
+    # Return the timed out worker to the worker pool if allowed by configuration.
+    if not config.data["ban_timed_out_workers"]:
+        workqueue.free("intermediate_prover", timeout.ts)
+
+    def prove(timestamp):
+        modules.intermediate_prover(timeout.witness_vector, timestamp)
+    workqueue.submit("intermediate_prover", prove, timeout.ts)
+
+
 def init():
     # Set the number of available workers for each relevant module type based on the given configuration
     for module, num_workers in config.data["num_workers"].items():
@@ -105,4 +116,5 @@ def init():
     eventloop.set_handler("witness", process_witness)
     eventloop.set_handler("witness_vector", process_witness_vector)
     eventloop.set_handler("intermediate_proof", process_intermediate_proof)
+    eventloop.set_handler("intermediate_proof_timeout", process_intermediate_proof_timeout)
     eventloop.set_handler("root_proof", lambda event: None)  # Do nothing with the root proof.
