@@ -2,6 +2,8 @@
 
 from queue import PriorityQueue
 
+import stats
+
 # Events that still need to be processed by the simulation, sorted by timestamp.
 # The entries are tuples of (timestamp, event), where timestamp is the logical time
 # at which event should be processed.
@@ -31,6 +33,7 @@ def set_handler(event_type, handler):
 def process_event(event):
     if event.type not in handlers:
         raise Exception("Unknown event type: " + event.type)
+    stats.count(event.type)
     handlers[event.type](event)
     return event.ts
 

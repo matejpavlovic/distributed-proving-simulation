@@ -15,7 +15,7 @@ witness_vector:
 proof:
   size: 2
   generation_time: 200
-  omission_probability: 0.1
+  omission_probability: 0.05
   timeout: 1000
 
 # These values determine how many inputs are aggregated at each level of the proof tree
@@ -27,9 +27,9 @@ proof_tree_degree: 2
 # no more than the configured number of instances of each module type runs concurrently.
 num_workers:
   witness_generator: 50
-  intermediate_prover: 10
+  intermediate_prover: 20
   witness_vector_generator: 20
 
 # If set to true, a worker that times out once is not assigned new tasks.
 # Attention: If all provers are banned, the simulation stops without producing a proof.
-ban_timed_out_workers: false
+ban_timed_out_workers: true
