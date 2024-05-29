@@ -31,4 +31,4 @@ print("Elapsed logical time: {0}".format(elapsed_time))
 
 # Make sure that the root proof has been generated successfully.
 if stats.counters["root_proof"] != 1:
-    raise Exception("Number of generated rot proofs: {}".format(stats.counters["root_proof"]))
+    raise Exception("Number of generated root proofs: {}".format(stats.counters["root_proof"]))
